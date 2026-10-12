@@ -1,0 +1,11 @@
+{
+  "name": "level18", "private": true, "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test",
+    "dev": "node scripts/build.mjs && wrangler dev",
+    "deploy:preview": "node scripts/build.mjs && wrangler deploy",
+    "deploy:production": "node scripts/build.mjs && wrangler deploy --env production"
+  },
+  "devDependencies": { "wrangler": "4.149.0" }
+}
