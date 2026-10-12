@@ -7,7 +7,8 @@ O visual existente foi preservado. O navegador envia somente a resposta e o ID d
 - Código preparado a partir do commit `1e7139c6fa94b9317dadca22f0660fa5513bfb33` de `g-soares-ux/LEVEL18`.
 - Site atual: https://level18.7jwszk4tc9.workers.dev/ — não alterado por esta entrega.
 - Preview configurado como `level18-ai-preview`; produção como `level18`.
-- Testes automatizados com IA simulada e compilação local validados. Inferência real e publicação ainda dependem de autenticação na conta Cloudflare.
+- Onze testes automatizados com IA simulada e compilação local validados. Preview publicado em https://level18-ai-preview.level18.workers.dev/; respostas iniciais e leitura testadas com Workers AI real. Qualidade pedagógica ainda requer avaliação mais ampla.
+- A conta autenticada não contém o Worker original `level18`; confirmar a conta que hospeda `7jwszk4tc9.workers.dev` antes de qualquer deploy de produção.
 
 ## Primeiro passo: publicar somente o preview
 

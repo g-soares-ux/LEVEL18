@@ -37,7 +37,13 @@ export default {
         if (!cookie) return json({ error: 'Inicie um diagnóstico.', expired: true }, 401);
         try { id = env.SESSIONS.idFromString(cookie); } catch { return json({ error: 'Sessão inválida.', expired: true }, 401); }
       }
-      const response = await env.SESSIONS.get(id).fetch(request);
+      let forwarded = request;
+      if (request.method === 'POST') {
+        let body;
+        try { body = await readBody(request); } catch { return json({ error: 'Envie dados válidos.' }, 400); }
+        forwarded = new Request(request.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      }
+      const response = await env.SESSIONS.get(id).fetch(forwarded);
       if (url.pathname !== '/api/start' || !response.ok) return response;
       const headers = new Headers(response.headers);
       headers.set('Set-Cookie', `__Host-level18=${id}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${TTL/1000}`);

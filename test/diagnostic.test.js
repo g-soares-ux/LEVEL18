@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import worker, { DiagnosticSession, readBody } from '../src/worker.js';
-import { target, estimate, grade, warmup } from '../src/diagnostic.js';
+import { target, estimate, grade, warmup, nextTask } from '../src/diagnostic.js';
 const attempt = (band='A1', score=2, fn='recado', domain='P', stage=1) => ({task:{id:1,band,stage,domain,function:fn,representative:true},answer:'hello',grade:{score,evidence:'hello',errorType:'none',feedback:'ok'}});
 test('warmups cannot establish a band; missing evidence is not zero', () => {
   assert.equal(estimate([]).level, null);
@@ -70,4 +70,23 @@ test('API rejects cross-origin, invalid method, missing session, and enforces li
 });
 test('oversized request rejected before inference',async()=>{
   await assert.rejects(readBody(new Request('https://test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({answer:'x'.repeat(13000)})})));
+});
+test('public API consumes input before forwarding and sets a protected session cookie', async () => {
+  let received;
+  const env = {
+    AI_ENABLED:'true', RATE_LIMITER:{limit:async()=>({success:true})},
+    SESSIONS:{newUniqueId:()=> 'a'.repeat(64), get:()=>({fetch:async request=>{
+      received=await request.json(); return Response.json({answered:0});
+    }})}
+  };
+  const request=new Request('https://test/api/start',{method:'POST',headers:{Origin:'https://test','Content-Type':'application/json'},body:'{}'});
+  const response=await worker.fetch(request,env);
+  assert.equal(response.status,200); assert.deepEqual(received,{});assert.equal(request.bodyUsed,true);
+  assert.match(response.headers.get('set-cookie'),/HttpOnly; Secure; SameSite=Strict/);
+});
+test('generated tasks cannot instruct the learner to answer in Portuguese', async () => {
+  const env={AI:{run:async()=>({response:{prompt:'Leia a mensagem e explique o sentido. Responda em português.',criterion:'Compreender a mensagem.'}})}};
+  const task=await nextTask(env,[{task:warmup(1),grade:{score:2}},{task:warmup(2),grade:{score:2}}]);
+  assert.doesNotMatch(task.prompt,/Responda em português/i);
+  assert.match(task.prompt,/Responda em INGLÊS/);
 });
