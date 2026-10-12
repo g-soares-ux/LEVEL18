@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "level18-ai-preview",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-10-12",
+  "assets": { "directory": "./dist", "binding": "ASSETS", "run_worker_first": ["/api/*"] },
+  "ai": { "binding": "AI" },
+  "durable_objects": { "bindings": [{ "name": "SESSIONS", "class_name": "DiagnosticSession" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["DiagnosticSession"] }],
+  "ratelimits": [{ "name": "RATE_LIMITER", "namespace_id": "181801", "simple": { "limit": 20, "period": 60 } }],
+  "vars": { "AI_ENABLED": "true", "AI_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast" },
+  "env": {
+    "production": {
+      "name": "level18",
+      "ai": { "binding": "AI" },
+      "durable_objects": { "bindings": [{ "name": "SESSIONS", "class_name": "DiagnosticSession" }] },
+      "ratelimits": [{ "name": "RATE_LIMITER", "namespace_id": "181802", "simple": { "limit": 20, "period": 60 } }],
+      "vars": { "AI_ENABLED": "true", "AI_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast" }
+    }
+  }
+}
