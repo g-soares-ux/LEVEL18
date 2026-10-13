@@ -1,7 +1,7 @@
 import { renderFeedback } from './feedback.js';
 const $ = id => document.getElementById(id);
-let state, waiting = false, busy = false;
-function show(id) { ['welcome','quiz','result'].forEach(x => $(x).classList.toggle('hide', x !== id)); }
+let state, waiting = false, busy = false, screen = 'welcome';
+function show(id) { screen = id; ['welcome','quiz','result'].forEach(x => $(x).classList.toggle('hide', x !== id)); }
 function message(text) { $('feedback').textContent = text; $('feedback').classList.remove('hide'); }
 async function api(path, body) {
   const response = await fetch(`/api/${path}`, { method: body ? 'POST' : 'GET', headers: body ? { 'Content-Type':'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
@@ -11,7 +11,7 @@ async function api(path, body) {
 }
 function lock(value) {
   busy = value;
-  ['start','next','skip','restart'].forEach(id => $(id).disabled = value);
+  ['start','next','skip','restart','resume'].forEach(id => $(id).disabled = value);
   $('answer').disabled = value || waiting;
 }
 function render() {
@@ -45,12 +45,12 @@ async function respond(skip = false) {
   try {
     state = await api('answer', { taskId: state.task.id, answer });
     waiting = true;
-    if (state.result) { finish(); return; }
+    if (state.result) { if (screen !== 'welcome') finish(); else menu(); return; }
     renderFeedback($('feedback'), state.feedback);
     $('skip').classList.add('hide'); $('next').textContent = 'Próxima pergunta →';
     $('bar').style.width = `${state.answered / state.total * 100}%`;
   } catch (e) {
-    if (e.expired) { show('welcome'); $('startStatus').textContent = e.message; }
+    if (e.expired) { state = null; menu(); $('startStatus').textContent = e.message; }
     else message(e.message);
   } finally { lock(false); }
 }
@@ -70,9 +70,23 @@ function finish() {
   window.report = `LEVEL18 ${state.version}\nEstimativa: ${r.level === null ? 'insuficiente' : r.level + '/18'} ${r.band ?? ''}\n\n` + r.attempts.map(a => `${a.task.id}. ${a.task.prompt}\nResposta: ${a.answer}\nEstado: ${a.grade.stateId ?? 'indisponível'}\nNota funcional: ${a.grade.score}\nFeedback: ${a.grade.feedback}\nEvidência: ${a.grade.evidence}`).join('\n\n');
   $('copyStatus').textContent = '';
 }
+function menu() {
+  show('welcome');
+  $('resume').classList.toggle('hide', !state);
+  $('resume').textContent = state?.result ? 'Ver resultado →' : 'Continuar diagnóstico →';
+  $('start').textContent = state ? 'Iniciar novo diagnóstico →' : 'Iniciar diagnóstico →';
+  window.scrollTo(0,0);
+  $('start').focus();
+}
+$('home').onclick = menu;
+$('resume').onclick = () => {
+  if (busy || !state) return;
+  if (state.result) finish();
+  else { show('quiz'); (waiting ? $('next') : $('answer')).focus(); }
+};
 $('start').onclick = start;
 $('next').onclick = () => respond();
 $('skip').onclick = () => respond(true);
-$('restart').onclick = () => { waiting = false; show('welcome'); window.scrollTo(0,0); };
+$('restart').onclick = menu;
 $('copy').onclick = async () => { try { await navigator.clipboard.writeText(window.report); $('copyStatus').textContent = 'Relatório copiado.'; } catch { $('copyStatus').textContent = 'O navegador não permitiu copiar o relatório.'; } };
-try { state = await api('state'); render(); } catch { /* A new visit starts on the welcome screen. */ }
+try { state = await api('state'); render(); menu(); } catch { /* A new visit starts on the welcome screen. */ }
