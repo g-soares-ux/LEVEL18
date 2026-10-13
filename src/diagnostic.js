@@ -1,7 +1,7 @@
 import { FEEDBACK_STATES } from './feedback.js';
 export const BANDS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 export const TOTAL = 15;
-export const VERSION = 'web-ai-0.2-feedback';
+export const VERSION = 'web-ai-0.3-feedback';
 export const warmup = n => ({ id: n, band: 'A1', stage: 1, domain: 'P', function: 'aquecimento', representative: false,
   prompt: n === 1 ? 'Traduza para o INGLÊS: CACHORRO.' : 'Traduza para o INGLÊS: QUAL É O SEU NOME?',
   criterion: n === 1 ? 'Aceitar dog, a dog ou dogs.' : "Aceitar What is your name? ou What's your name?" });
