@@ -34,7 +34,7 @@ function harness() {
   const env={AI_MODEL:'mock',AI:{run:async(_,input)=>{
     calls++;
     const data=JSON.parse(input.messages[1].content);
-    if (input.response_format.json_schema.properties.score) return {response:{score:2,evidence:data.answer,feedback:'Boa resposta.',errorType:'none'}};
+    if (input.response_format.json_schema.properties.stateId) return {response:{stateId:'VVV',analysis:'Boa resposta.'}};
     return {response:{prompt:`Situação inédita ${data.target.id}: escreva em inglês.`,criterion:'Comunique o propósito.'}};
   }}};
   const session=new DiagnosticSession({storage},env);
