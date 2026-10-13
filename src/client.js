@@ -1,3 +1,4 @@
+import { renderFeedback } from './feedback.js';
 const $ = id => document.getElementById(id);
 let state, waiting = false, busy = false;
 function show(id) { ['welcome','quiz','result'].forEach(x => $(x).classList.toggle('hide', x !== id)); }
@@ -45,7 +46,7 @@ async function respond(skip = false) {
     state = await api('answer', { taskId: state.task.id, answer });
     waiting = true;
     if (state.result) { finish(); return; }
-    message(['● ○ ○','● ● ○','● ● ●'][state.feedback.score] + '  ' + state.feedback.feedback);
+    renderFeedback($('feedback'), state.feedback);
     $('skip').classList.add('hide'); $('next').textContent = 'Próxima pergunta →';
     $('bar').style.width = `${state.answered / state.total * 100}%`;
   } catch (e) {
@@ -65,8 +66,8 @@ function finish() {
   if (partial) points.push(`Próximo passo: ${partial.grade.feedback}`);
   if (!points.length) points.push('Precisamos de mais respostas em contexto para identificar seus pontos fortes.');
   for (const text of points) { const li = document.createElement('li'); li.textContent = text; $('details').append(li); }
-  $('lastFeedback').textContent = state.feedback.feedback;
-  window.report = `LEVEL18 ${state.version}\nEstimativa: ${r.level === null ? 'insuficiente' : r.level + '/18'} ${r.band ?? ''}\n\n` + r.attempts.map(a => `${a.task.id}. ${a.task.prompt}\nResposta: ${a.answer}\nNota funcional: ${a.grade.score}\nFeedback: ${a.grade.feedback}\nEvidência: ${a.grade.evidence}`).join('\n\n');
+  renderFeedback($('lastFeedback'), state.feedback);
+  window.report = `LEVEL18 ${state.version}\nEstimativa: ${r.level === null ? 'insuficiente' : r.level + '/18'} ${r.band ?? ''}\n\n` + r.attempts.map(a => `${a.task.id}. ${a.task.prompt}\nResposta: ${a.answer}\nEstado: ${a.grade.stateId ?? 'indisponível'}\nNota funcional: ${a.grade.score}\nFeedback: ${a.grade.feedback}\nEvidência: ${a.grade.evidence}`).join('\n\n');
   $('copyStatus').textContent = '';
 }
 $('start').onclick = start;
